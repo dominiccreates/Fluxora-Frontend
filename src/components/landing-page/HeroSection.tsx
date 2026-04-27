@@ -115,14 +115,19 @@ export default function HeroSection({ theme = "light" }: HeroSectionProps) {
               </button>
 
               <button
-                className={`
-                  flex cursor-pointer items-center gap-3 rounded-2xl border px-8 py-4 text-lg font-bold transition-all duration-300 hover:bg-white/5 active:scale-95
-                  ${
-                    isDark
-                      ? "border-slate-800 bg-slate-900/50 text-slate-300 hover:border-slate-600"
-                      : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 shadow-sm"
-                  }
-                `}
+                className="flex cursor-pointer items-center gap-3 rounded-2xl border px-8 py-4 text-lg font-bold transition-all duration-300 active:scale-95"
+                style={{
+                  borderColor: "var(--color-border-default)",
+                  background: "var(--color-surface-default)",
+                  color: "var(--color-text-secondary)",
+                  boxShadow: "var(--shadow-sm)",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--color-border-secondary)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--color-border-default)";
+                }}
                 onClick={() => alert("Watch demo clicked")}
               >
                 <div className="flex h-6 w-6 items-center justify-center rounded-full bg-cyan-500/10 text-cyan-500">

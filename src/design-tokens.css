@@ -1,18 +1,19 @@
 /**
  * Design Tokens: Base + Theme Overrides
  * ──────────────────────────────────────
- * 
- * This file establishes the single source of truth for all
- * visual attributes: colors, typography, spacing, animations.
- * 
+ *
+ * Single source of truth for all visual attributes:
+ * colors, typography, spacing, shadows, animations.
+ *
  * Usage:
  *   .my-element {
  *     background: var(--color-bg-primary);
  *     padding: var(--space-lg);
  *   }
- * 
- * Theme Switching:
+ *
+ * Theme switching:
  *   document.documentElement.setAttribute("data-theme", "dark");
+ *   document.documentElement.setAttribute("data-theme", "light");
  */
 
 /* ═══════════════════════════════════════════════════════════
@@ -55,7 +56,40 @@
   --interactive-focus-ring: #007acc;
   --interactive-focus-ring-offset: transparent;
 
+  /* ===== SEMANTIC COLOR TOKENS (used by components) ===== */
+  /* Backgrounds */
+  --color-bg-primary: var(--surface-base);
+  --color-bg-secondary: var(--surface-sunken);
+  --color-bg-tertiary: var(--surface-elevated);
+
+  /* Surfaces */
+  --color-surface-default: var(--surface-neutral);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-highest: var(--surface-highest);
+
+  /* Borders */
+  --color-border-default: var(--border-neutral);
+  --color-border-secondary: var(--border-strong);
+
+  /* Text */
+  --color-text-primary: var(--text-vivid);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-muted);
+  --color-text-muted: var(--text-muted);
+  --color-text-inverse: #ffffff;
+
+  /* Focus */
+  --color-focus: #0ea5e9;
+
+  /* Status (semantic aliases) */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #3b82f6;
+
   /* ===== LEGACY / COMPATIBILITY MAP ===== */
+  /* These keep existing components working without changes */
   --bg: var(--surface-base);
   --surface: var(--surface-neutral);
   --surface-elevated-legacy: var(--surface-elevated);
@@ -69,7 +103,7 @@
   --text: var(--text-vivid);
   --muted: var(--text-muted);
 
-  /* ─── Interactive / Brand (Original tokens) ─── */
+  /* ─── Interactive / Brand ─── */
   --color-accent-primary: #00b8d4;
   --color-accent-secondary: #00d4aa;
   --color-accent-primary-dark: #0097a7;
@@ -85,11 +119,15 @@
   --color-cta-secondary-border: var(--color-border-default);
   --color-cta-secondary-text: var(--color-text-secondary);
 
-  /* ─── Backgrounds for Status Colors ─── */
+  /* ─── Status Background Tints ─── */
   --color-success-bg: rgba(30, 201, 142, 0.1);
   --color-warning-bg: rgba(255, 167, 38, 0.1);
   --color-danger-bg: rgba(255, 107, 107, 0.1);
   --color-info-bg: rgba(0, 184, 212, 0.1);
+
+  /* ─── Skeleton Loading ─── */
+  --skeleton-base: #e6edf5;
+  --skeleton-shine: #ffffff;
 
   /* Navbar */
   --navbar-bg: #ffffff;
@@ -149,6 +187,38 @@
   --interactive-focus-ring: #00d4aa;
   --interactive-focus-ring-offset: transparent;
 
+  /* ===== SEMANTIC COLOR TOKENS (dark overrides) ===== */
+  /* Backgrounds */
+  --color-bg-primary: var(--surface-base);
+  --color-bg-secondary: var(--surface-sunken);
+  --color-bg-tertiary: var(--surface-elevated);
+
+  /* Surfaces */
+  --color-surface-default: var(--surface-neutral);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-highest: var(--surface-highest);
+
+  /* Borders */
+  --color-border-default: var(--border-neutral);
+  --color-border-secondary: var(--border-strong);
+
+  /* Text */
+  --color-text-primary: var(--text-vivid);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-muted);
+  --color-text-muted: var(--text-muted);
+  --color-text-inverse: #0a0e17;
+
+  /* Focus */
+  --color-focus: #00d4aa;
+
+  /* Status (semantic aliases) */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-info: #3b82f6;
+
   /* ===== LEGACY / COMPATIBILITY MAP ===== */
   --bg: var(--surface-base);
   --surface: var(--surface-neutral);
@@ -160,11 +230,15 @@
   --text: var(--text-vivid);
   --muted: var(--text-muted);
 
-  /* ─── Backgrounds for Status Colors ─── */
+  /* ─── Status Background Tints ─── */
   --color-success-bg: rgba(30, 201, 142, 0.15);
   --color-warning-bg: rgba(255, 167, 38, 0.15);
   --color-danger-bg: rgba(255, 107, 107, 0.15);
   --color-info-bg: rgba(0, 184, 212, 0.15);
+
+  /* ─── Skeleton Loading ─── */
+  --skeleton-base: #1f2a3e;
+  --skeleton-shine: #38516f;
 
   /* Navbar */
   --navbar-bg: #0f1419;
@@ -194,7 +268,6 @@
   --font-family-mono: "Monaco", "Menlo", "Courier New", monospace;
 
   /* ─── Heading Scale ─── */
-  /* font: weight size/line-height family; */
   --font-heading-1: 500 36px / 44px var(--font-family-base);
   --font-heading-2: 600 24px / 32px var(--font-family-base);
   --font-heading-3: 600 18px / 28px var(--font-family-base);
@@ -287,14 +360,13 @@
   --transition-base: 200ms ease-in-out;
   --transition-slow: 300ms ease-in-out;
 
-  /* ─── Easing functions (explicit) ─── */
   --ease-in: ease-in;
   --ease-out: ease-out;
   --ease-in-out: ease-in-out;
   --ease-cubic: cubic-bezier(0.4, 0, 0.6, 1);
 }
 
-/* ─── Pulse animation (for skeletons, loaders) ─── */
+/* ─── Pulse animation (skeletons, loaders) ─── */
 @keyframes pulse {
   0%,
   100% {
@@ -305,7 +377,17 @@
   }
 }
 
-/* ─── Spin animation (for loading spinners) ─── */
+/* ─── Shimmer animation (skeleton loading) ─── */
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ─── Spin animation (loading spinners) ─── */
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -336,6 +418,15 @@
   }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   8. SHARED UI COMPONENT CLASSES
+   ═══════════════════════════════════════════════════════════ */
+
+/**
+ * .ui-primary-cta
+ * Primary call-to-action button — used on both landing and app surfaces.
+ * Keeps visual language consistent across marketing and authenticated views.
+ */
 .ui-primary-cta {
   display: inline-flex;
   align-items: center;
@@ -392,6 +483,10 @@
   white-space: nowrap;
 }
 
+/**
+ * .ui-secondary-control
+ * Secondary/ghost button — used alongside primary CTAs.
+ */
 .ui-secondary-control {
   display: inline-flex;
   align-items: center;
@@ -422,7 +517,7 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   8. BREAKPOINTS
+   9. BREAKPOINTS
    ═══════════════════════════════════════════════════════════ */
 
 :root {
@@ -435,17 +530,16 @@
 }
 
 /* ═══════════════════════════════════════════════════════════
-   9. FOCUS / ACCESSIBILITY
+   10. FOCUS / ACCESSIBILITY
    ═══════════════════════════════════════════════════════════ */
 
 :root {
-  /* Focus ring: 2px solid focus color with 2px offset */
   --focus-outline: 2px solid var(--color-focus);
   --focus-outline-offset: 2px;
 }
 
 /* ═══════════════════════════════════════════════════════════
-   10. RESPONSIVE MOTION (prefers-reduced-motion)
+   11. RESPONSIVE MOTION (prefers-reduced-motion)
    ═══════════════════════════════════════════════════════════ */
 
 @media (prefers-reduced-motion: reduce) {
