@@ -11,7 +11,8 @@ export default function Home() {
         flexDirection: "column",
       }}
     >
-      <div 
+      <main 
+        id="main-content"
         style={{ 
           flex: 1,
           display: "flex",
@@ -23,7 +24,7 @@ export default function Home() {
         <div style={{ width: "100%", maxWidth: "800px" }}>
           <GetStartedCTA />
         </div>
-      </div>
+      </main>
       <Footer />
     </div>
   );

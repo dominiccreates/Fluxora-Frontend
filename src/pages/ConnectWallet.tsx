@@ -8,7 +8,7 @@ export default function ConnectWallet() {
   const [isCtaFocused, setIsCtaFocused] = useState(false);
 
   return (
-    <main style={styles.page} aria-labelledby="connect-wallet-heading">
+    <main id="main-content" style={styles.page} aria-labelledby="connect-wallet-heading">
       <GlowingDot top="34%" right="40%" size={18} opacity={0.6} />
       <GlowingDot top="42%" left="40%" size={12} opacity={0.5} />
 

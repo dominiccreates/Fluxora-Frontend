@@ -45,6 +45,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <WalletProvider>
+        <a href="#main-content" className="skip-link">
+          Skip to content
+        </a>
         <AppNavbar 
           onThemeToggle={handleThemeToggle} 
           theme={theme} 
