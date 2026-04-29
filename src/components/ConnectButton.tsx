@@ -1,3 +1,10 @@
+/**
+ * ConnectButton
+ * ─────────────
+ * Standalone "Connect wallet" trigger button.
+ * Uses design-token classes so it renders correctly in both themes.
+ */
+
 interface ConnectButtonProps {
   onClick?: () => void;
 }
@@ -6,7 +13,7 @@ export default function ConnectButton({ onClick }: ConnectButtonProps) {
   return (
     <button
       type="button"
-      className="button button--secondary"
+      className="button button--primary"
       onClick={onClick}
       aria-label="Connect wallet"
     >
@@ -19,7 +26,10 @@ export default function ConnectButton({ onClick }: ConnectButtonProps) {
         strokeWidth="2.2"
         strokeLinecap="round"
         strokeLinejoin="round"
-        style={{ width: "clamp(12px, 3.5vw, 14px)", height: "clamp(12px, 3.5vw, 14px)" }}
+        style={{
+          width: "clamp(12px, 3.5vw, 14px)",
+          height: "clamp(12px, 3.5vw, 14px)",
+        }}
         aria-hidden="true"
       >
         <path d="M18.36 6.64a9 9 0 1 1-12.73 0" />

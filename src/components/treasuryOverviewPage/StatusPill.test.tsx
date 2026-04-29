@@ -1,3 +1,12 @@
+/**
+ * StatusPill Tests
+ * ─────────────────
+ * Tests for the StatusPill component.
+ * 
+ * Note: jsdom doesn't resolve CSS variables, so we assert the variable
+ * names (e.g., "var(--color-success)") rather than resolved RGB values.
+ */
+
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect } from "vitest";
 import StatusPill from "./StatusPill";

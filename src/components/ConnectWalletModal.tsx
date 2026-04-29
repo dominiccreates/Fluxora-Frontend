@@ -1,4 +1,5 @@
-import { CSSProperties, MouseEvent, useEffect, useRef, useState } from "react";
+import { MouseEvent, useEffect, useRef } from "react";
+import styles from "./ConnectWalletModal.module.css";
 
 interface ConnectWalletModalProps {
   isOpen: boolean;
@@ -25,9 +26,6 @@ export default function ConnectWalletModal({
 }: ConnectWalletModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const [hoveredOptionId, setHoveredOptionId] = useState<string | null>(null);
-  const [focusedOptionId, setFocusedOptionId] = useState<string | null>(null);
-  const [isCloseFocused, setIsCloseFocused] = useState(false);
 
   useEffect(() => {
     if (!isOpen) {
@@ -40,13 +38,14 @@ export default function ConnectWalletModal({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         onClose();
+        return;
       }
 
       if (e.key !== "Tab") {
         return;
       }
 
-      const focusableElements = modalRef.current?.querySelectorAll(
+      const focusableElements = modalRef.current?.querySelectorAll<HTMLElement>(
         'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
       );
 
@@ -54,8 +53,8 @@ export default function ConnectWalletModal({
         return;
       }
 
-      const firstElement = focusableElements[0] as HTMLElement;
-      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+      const firstElement = focusableElements[0];
+      const lastElement = focusableElements[focusableElements.length - 1];
 
       if (e.shiftKey && document.activeElement === firstElement) {
         e.preventDefault();
@@ -91,22 +90,21 @@ export default function ConnectWalletModal({
       name: "Freighter",
       description: "Recommended browser extension for Stellar wallets.",
       icon: "🚀",
-      action: onConnectFreighter || (() => console.log("Freighter clicked")),
+      action: onConnectFreighter ?? (() => {}),
     },
     {
       id: "albedo",
       name: "Albedo",
       description: "Open in-browser wallet for quick secure approvals.",
       icon: "⭐",
-      action: onConnectAlbedo || (() => console.log("Albedo clicked")),
+      action: onConnectAlbedo ?? (() => {}),
     },
     {
       id: "walletconnect",
       name: "WalletConnect",
       description: "Pair with compatible mobile wallets via QR.",
       icon: "🔗",
-      action:
-        onConnectWalletConnect || (() => console.log("WalletConnect clicked")),
+      action: onConnectWalletConnect ?? (() => {}),
     },
   ];
 
@@ -114,13 +112,14 @@ export default function ConnectWalletModal({
     <div className={styles.backdrop} onClick={handleBackdropClick}>
       <div
         id="connect-wallet-modal"
-        style={styles.modal}
+        className={styles.modal}
         ref={modalRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="connect-wallet-modal-title"
         aria-describedby="connect-wallet-modal-description"
       >
+        {/* Close button */}
         <button
           type="button"
           ref={closeButtonRef}
@@ -131,19 +130,31 @@ export default function ConnectWalletModal({
               : "none",
           }}
           onClick={onClose}
-          onFocus={() => setIsCloseFocused(true)}
-          onBlur={() => setIsCloseFocused(false)}
           aria-label="Close wallet connection dialog"
         >
-          ✕
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 14 14"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M1 1l12 12M13 1L1 13"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
+          </svg>
         </button>
 
-        <div style={styles.header}>
-          <span style={styles.badge}>Step 1 of 1</span>
-          <h2 id="connect-wallet-modal-title" style={styles.title}>
+        {/* Header */}
+        <div className={styles.header}>
+          <span className={styles.badge}>Step 1 of 1</span>
+          <h2 id="connect-wallet-modal-title" className={styles.title}>
             Choose your wallet
           </h2>
-          <p id="connect-wallet-modal-description" style={styles.subtitle}>
+          <p id="connect-wallet-modal-description" className={styles.subtitle}>
             Select a provider below to connect. You will review and approve the
             request in your wallet.
           </p>
@@ -183,14 +194,31 @@ export default function ConnectWalletModal({
                 <div style={styles.chevron} aria-hidden="true">
                   →
                 </div>
-              </button>
-            );
-          })}
+              </div>
+              <svg
+                className={styles.chevron}
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M6 3l5 5-5 5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          ))}
         </div>
 
-        <p style={styles.footer}>
+        {/* Footer */}
+        <p className={styles.footer}>
           By continuing, you agree to Fluxora&apos;s{" "}
-          <a href="/terms" style={styles.termsLink}>
+          <a href="/terms" className={styles.termsLink}>
             Terms of Service
           </a>
           .

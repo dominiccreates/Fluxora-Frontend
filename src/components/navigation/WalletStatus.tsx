@@ -13,59 +13,79 @@ function truncate(addr: string) {
 
 const SUPPORTED_NETWORKS = ["PUBLIC", "TESTNET"];
 
-export default function WalletStatus({ address, network, onDisconnect }: WalletStatusProps) {
+export default function WalletStatus({
+  address,
+  network,
+  onDisconnect,
+}: WalletStatusProps) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const focusRingClassName =
     "outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--navbar-bg)]";
 
-  const isWrongNetwork = !SUPPORTED_NETWORKS.includes(network?.toUpperCase() ?? "");
-  const isTestnet = network?.toUpperCase() === "TESTNET";
+  const networkUpper = network?.toUpperCase() ?? "";
+  const isWrongNetwork = !SUPPORTED_NETWORKS.includes(networkUpper);
+  const isTestnet = networkUpper === "TESTNET";
 
   useEffect(() => {
     const close = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
     };
-    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+
+    const esc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+
     document.addEventListener("mousedown", close);
     document.addEventListener("keydown", esc);
-    return () => { document.removeEventListener("mousedown", close); document.removeEventListener("keydown", esc); };
+
+    return () => {
+      document.removeEventListener("mousedown", close);
+      document.removeEventListener("keydown", esc);
+    };
   }, []);
 
   const handleCopy = async () => {
-    try { await navigator.clipboard.writeText(address); } catch { /* noop */ }
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {}
   };
+
+  const explorerUrl = isTestnet
+    ? `https://stellar.expert/explorer/testnet/account/${address}`
+    : `https://stellar.expert/explorer/public/account/${address}`;
 
   return (
     <div ref={ref} className="flex items-center gap-2">
-      {/* Network badge */}
+      {/* Network Badge */}
       {isWrongNetwork ? (
-        <span
-          role="alert"
-          aria-label="Wrong network detected. Please switch to Mainnet or Testnet."
-          className="flex items-center gap-1.5 px-3 h-8 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/40 animate-pulse"
-        >
-          <span aria-hidden="true" className="w-2 h-2 rounded-full bg-red-400" />
+        <span className="flex items-center gap-1.5 px-3 h-8 rounded-full text-xs font-semibold bg-red-500/20 text-red-400 border border-red-500/40">
+          <span className="w-2 h-2 rounded-full bg-red-400" />
           Wrong Network
         </span>
       ) : (
         <span
-          aria-label={`Connected to ${network}`}
-          className={[
-            "px-3 h-8 rounded-full text-xs font-semibold flex items-center",
+          className={`flex items-center gap-1.5 px-3 h-8 rounded-full text-xs font-semibold border ${
             isTestnet
-              ? "bg-amber-400/15 text-amber-300 border border-amber-400/30"
-              : "bg-emerald-400/15 text-emerald-300 border border-emerald-400/30",
-          ].join(" ")}
+              ? "bg-amber-400/15 text-amber-300 border-amber-400/30"
+              : "bg-emerald-400/15 text-emerald-300 border-emerald-400/30"
+          }`}
         >
+          <span
+            className={`w-2 h-2 rounded-full ${
+              isTestnet ? "bg-amber-300" : "bg-emerald-400"
+            }`}
+          />
           {isTestnet ? "Testnet" : "Mainnet"}
         </span>
       )}
 
-      {/* Wallet pill + dropdown */}
+      {/* Wallet Button */}
       <div className="relative">
         <button
           onClick={() => setOpen((o) => !o)}
@@ -74,29 +94,29 @@ export default function WalletStatus({ address, network, onDisconnect }: WalletS
           aria-label={`Wallet ${truncate(address)}. Open wallet options.`}
           className={`flex items-center gap-2 px-3 h-9 rounded-full bg-[var(--surface)] border border-[var(--border)] text-sm font-medium text-[var(--text)] cursor-pointer transition-colors hover:border-[var(--accent)]/50 ${focusRingClassName}`}
         >
-          <span aria-hidden="true" className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_0_3px_rgba(52,211,153,0.2)]" />
+          <span className="w-2 h-2 rounded-full bg-emerald-400" />
           <span className="font-mono text-xs">{truncate(address)}</span>
           <ChevronDown
-            size={14}
-            aria-hidden="true"
-            className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+            size={16}
+            className={`transition-transform ${open ? "rotate-180" : ""}`}
           />
         </button>
 
+        {/* Dropdown */}
         {open && (
-          <div
-            role="menu"
-            aria-label="Wallet options"
-            className="absolute right-0 top-[calc(100%+8px)] w-48 bg-[var(--navbar-bg)] border border-[var(--navbar-border)] rounded-xl shadow-[var(--navbar-shadow)] p-1.5 z-50"
-          >
+          <div className="absolute right-0 mt-2 w-52 bg-[var(--navbar-bg)] border border-[var(--navbar-border)] rounded-xl shadow-md p-1.5 z-50">
             <button
-              role="menuitem"
               onClick={handleCopy}
               className={`flex items-center gap-2.5 w-full px-3 py-2 text-sm text-[var(--text)] rounded-lg hover:bg-[var(--surface)] transition-colors ${focusRingClassName}`}
             >
-              {copied ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} aria-hidden="true" />}
+              {copied ? (
+                <Check size={16} className="text-emerald-400" />
+              ) : (
+                <Copy size={16} />
+              )}
               {copied ? "Copied!" : "Copy address"}
             </button>
+
             <button
               role="menuitem"
               onClick={() => { 
@@ -106,16 +126,18 @@ export default function WalletStatus({ address, network, onDisconnect }: WalletS
               }}
               className="flex items-center gap-2.5 w-full px-3 py-2 text-sm text-[var(--text)] rounded-lg hover:bg-[var(--surface)] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
             >
-              <ExternalLink size={14} aria-hidden="true" />
+              <ExternalLink size={16} />
               View in explorer
             </button>
-            <div role="separator" className="my-1 h-px bg-[var(--navbar-border)]" />
+
+            <div className="my-1 h-px bg-[var(--navbar-border)]" />
+
             <button
               role="menuitem"
               onClick={() => { setOpen(false); onDisconnect?.(); }}
               className={`flex items-center gap-2.5 w-full px-3 py-2 text-sm text-red-400 rounded-lg hover:bg-[var(--surface)] transition-colors ${focusRingClassName}`}
             >
-              <LogOut size={14} aria-hidden="true" />
+              <LogOut size={16} />
               Disconnect
             </button>
           </div>

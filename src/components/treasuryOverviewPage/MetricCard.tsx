@@ -1,3 +1,11 @@
+/**
+ * MetricCard
+ * ──────────
+ * Treasury overview metric card.
+ * Uses design tokens for all visual properties so it responds
+ * correctly to light/dark theme switching.
+ */
+
 import { Metric } from "./Metric";
 
 export default function MetricCard({ icon, label, value, desc }: Metric) {
@@ -7,6 +15,15 @@ export default function MetricCard({ icon, label, value, desc }: Metric) {
       style={{ backgroundColor: "var(--color-surface-default)", border: "1px solid var(--color-border-default)" }}
       role="group"
       aria-label={label}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        backgroundColor: "var(--color-surface-default)",
+        border: "1px solid var(--color-border-default)",
+        borderRadius: "var(--radius-xl)",
+        padding: "var(--space-xl)",
+        height: "100%",
+      }}
     >
       <div className="flex items-center justify-center w-10 h-10 text-3xl leading-none mb-4 shrink-0" style={{ color: "var(--color-text-secondary)" }}>
         {icon}
