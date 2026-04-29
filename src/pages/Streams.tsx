@@ -8,6 +8,7 @@ import ToastNotification, {
 } from "../components/ToastNotification";
 import StreamsLoading from "../components/StreamsLoading";
 import ZeroAccrualBanner from "../components/ZeroAccrualBanner";
+import { Pagination } from "../components/Pagination";
 import {
   getStreamRecord,
   streamRecords,
@@ -504,6 +505,11 @@ export default function Streams() {
     message: string;
     variant: ToastVariant;
   } | null>(null);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   const walletConnected = true;
 
   useEffect(() => {
@@ -537,6 +543,13 @@ export default function Streams() {
     statusFilter === "All"
       ? streamRecords
       : streamRecords.filter((stream) => stream.status === statusFilter);
+
+  // Pagination logic
+  const paginatedStreams = visibleStreams.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage,
+  );
+
   const selectedStream = streamId ? getStreamRecord(streamId) : undefined;
   const hasStreams = streamRecords.length > 0;
   const showEmptyState = !selectedStream && (!walletConnected || !hasStreams);
@@ -732,7 +745,7 @@ export default function Streams() {
             </div>
 
             <div className="streams-list">
-              {visibleStreams.map((stream) => (
+              {paginatedStreams.map((stream) => (
                 <StreamCard
                   key={stream.id}
                   stream={stream}
@@ -746,6 +759,20 @@ export default function Streams() {
                 />
               ))}
             </div>
+
+            <Pagination
+              currentPage={currentPage}
+              totalItems={visibleStreams.length}
+              itemsPerPage={itemsPerPage}
+              onPageChange={(page) => {
+                setCurrentPage(page);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              onItemsPerPageChange={(limit) => {
+                setItemsPerPage(limit);
+                setCurrentPage(1);
+              }}
+            />
           </section>
         </>
       )}
