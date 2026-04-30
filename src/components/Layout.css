@@ -1,282 +1,232 @@
-/* Layout.css
-   App shell layout: sidebar, content area, mobile topbar, backdrop.
-   All values use design tokens from design-tokens.css.
-*/
+:root {
+  /* spacing tokens */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
 
-/* ── App shell ── */
+  /* layout */
+  --sidebar-width: 244px;
+  --sidebar-collapsed: 84px;
+  --layout-gutter: var(--space-6);
+  --section-gap: var(--space-8);
+
+  /* radius */
+  --radius-md: 10px;
+}
+
+/* ======================
+   BASE LAYOUT
+====================== */
+
 .app-layout {
   display: flex;
+  flex-direction: column;
   min-height: 100vh;
-  background: var(--color-bg-primary, var(--bg));
+  background: var(--bg);
 }
 
 .app-layout__body {
   display: flex;
   flex: 1;
-  min-height: 100vh;
+  gap: var(--layout-gutter);
+  padding: var(--layout-gutter);
+  overflow: hidden;
 }
 
-/* ── Sidebar ── */
+/* ======================
+   SIDEBAR
+====================== */
+
 .app-sidebar {
-  width: 220px;
-  flex-shrink: 0;
+  width: var(--sidebar-width);
+  background: var(--surface-elevated);
+  border-right: 1px solid var(--border);
+  border-radius: var(--radius-md);
+
+  padding: var(--space-5) var(--space-4);
+
   display: flex;
   flex-direction: column;
-  background: var(--color-surface-default, var(--surface));
-  border-right: 1px solid var(--color-border-default, var(--border));
-  transition: width var(--transition-base, 200ms ease-in-out);
-  overflow: hidden;
-  position: sticky;
-  top: 0;
-  height: 100vh;
+  gap: var(--space-4);
+
+  transition:
+    width 0.22s ease,
+    transform 0.22s ease;
+  z-index: 40;
 }
 
-.app-layout.is-collapsed .app-sidebar {
-  width: 60px;
-}
+/* ======================
+   NAV
+====================== */
 
-.app-sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-lg, 16px);
-  border-bottom: 1px solid var(--color-border-default, var(--border));
-  min-height: 56px;
-}
-
-.app-logo {
-  font-weight: 700;
-  font-size: 16px;
-  color: var(--color-accent-secondary, var(--accent));
-  white-space: nowrap;
-  overflow: hidden;
-}
-
-.app-sidebar-toggle {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--color-text-tertiary, var(--muted));
-  padding: 4px;
-  border-radius: var(--radius-sm, 4px);
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  transition: color var(--transition-fast, 150ms ease-in-out);
-}
-
-.app-sidebar-toggle:hover {
-  color: var(--color-text-primary, var(--text));
-}
-
-.app-sidebar-toggle:focus-visible {
-  outline: var(--focus-outline, 2px solid var(--color-focus));
-  outline-offset: var(--focus-outline-offset, 2px);
-}
-
-.app-toggle-chevron {
-  display: flex;
-  width: 16px;
-  height: 16px;
-  transition: transform var(--transition-base, 200ms ease-in-out);
-}
-
-.app-toggle-chevron.is-rotated {
-  transform: rotate(180deg);
-}
-
-/* ── Navigation ── */
 .app-nav {
   display: flex;
   flex-direction: column;
-  padding: var(--space-md, 12px) 0;
+  gap: var(--space-2);
   flex: 1;
-  overflow-y: auto;
 }
 
 .app-nav-link {
   display: flex;
   align-items: center;
-  gap: var(--space-sm, 8px);
-  padding: 10px var(--space-lg, 16px);
-  color: var(--color-text-tertiary, var(--muted));
+  gap: var(--space-3);
+
+  min-height: 2.8rem;
+  padding: var(--space-2) var(--space-3);
+
+  border-radius: var(--radius-md);
+
+  color: var(--text);
   text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-  border-left: 3px solid transparent;
-  transition: all var(--transition-fast, 150ms ease-in-out);
-  white-space: nowrap;
-  overflow: hidden;
+
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease;
 }
 
 .app-nav-link:hover {
-  background: var(--color-surface-raised, var(--surface-raised));
-  color: var(--color-text-secondary, var(--text));
-  border-left-color: var(--color-accent-secondary, var(--accent));
+  background: var(--surface-raised);
+  transform: translateX(2px);
 }
 
-.app-nav-link:focus-visible {
-  outline: var(--focus-outline, 2px solid var(--color-focus));
-  outline-offset: 0;
-}
-
+/* ACTIVE STATE */
 .app-nav-link.is-active {
-  color: var(--color-accent-secondary, var(--accent));
-  border-left-color: var(--color-accent-secondary, var(--accent));
-  font-weight: 600;
+  background: var(--surface-raised);
+  color: var(--accent);
+  border-left: 3px solid var(--accent);
 }
 
+/* badge */
 .app-nav-badge {
-  display: inline-flex;
-  width: 24px;
-  height: 24px;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 999px;
+
+  display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-sm, 4px);
-  background: var(--color-surface-elevated, var(--surface-elevated));
-  font-size: 11px;
-  font-weight: 700;
-  flex-shrink: 0;
+
+  font-size: 0.76rem;
+  font-weight: 600;
+
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
 }
 
-.app-nav-label {
-  transition: opacity var(--transition-base, 200ms ease-in-out);
-}
+/* ======================
+   BUTTON
+====================== */
 
-.app-layout.is-collapsed .app-nav-label {
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* ── Connect wallet CTA ── */
 .app-connect-button {
-  margin: var(--space-lg, 16px);
-  padding: 10px var(--space-lg, 16px);
-  background: var(--color-accent-primary, var(--primary));
-  color: #04131a;
+  margin-top: auto;
+
+  min-height: 2.8rem;
+
+  border-radius: var(--radius-md);
   border: none;
-  border-radius: var(--radius-md, 8px);
-  font-size: 13px;
-  font-weight: 700;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   cursor: pointer;
-  transition: all var(--transition-fast, 150ms ease-in-out);
-  text-align: center;
-  overflow: hidden;
+
+  background: var(--accent);
+  color: #0a0e17;
+
+  font-weight: 600;
+
+  padding: var(--space-3) var(--space-4);
 }
 
-.app-connect-button:hover {
-  background: var(--color-accent-primary-dark, var(--accent-dim));
-}
+/* ======================
+   CONTENT
+====================== */
 
-.app-connect-button:focus-visible {
-  outline: var(--focus-outline, 2px solid var(--color-focus));
-  outline-offset: var(--focus-outline-offset, 2px);
-}
-
-.app-connect-label {
-  display: block;
-  white-space: nowrap;
-  transition: opacity var(--transition-base, 200ms ease-in-out);
-}
-
-.app-layout.is-collapsed .app-connect-label {
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* ── Content area ── */
 .app-content-area {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  flex: 1;
   min-width: 0;
-  overflow: hidden;
+  gap: var(--section-gap);
 }
 
 .app-main {
   flex: 1;
-  padding: var(--space-2xl, 32px);
-  overflow-y: auto;
+  padding: var(--layout-gutter);
+  overflow: auto;
 }
 
-/* ── Mobile topbar ── */
+/* ======================
+   COLLAPSED
+====================== */
+
+.app-layout.is-collapsed .app-sidebar {
+  width: var(--sidebar-collapsed);
+}
+
+.app-layout.is-collapsed .app-nav-label {
+  display: none;
+}
+
+.app-layout.is-collapsed .app-nav-link {
+  justify-content: center;
+}
+
+/* ======================
+   MOBILE
+====================== */
+
 .app-mobile-topbar {
   display: none;
-  align-items: center;
-  gap: var(--space-md, 12px);
-  padding: var(--space-md, 12px) var(--space-lg, 16px);
-  border-bottom: 1px solid var(--color-border-default, var(--border));
-  background: var(--color-surface-default, var(--surface));
-  min-height: 52px;
 }
 
-.app-mobile-menu-btn {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: var(--radius-sm, 4px);
-}
-
-.app-mobile-menu-btn span {
-  display: block;
-  width: 20px;
-  height: 2px;
-  background: var(--color-text-secondary, var(--text));
-  border-radius: 2px;
-  transition: all var(--transition-base, 200ms ease-in-out);
-}
-
-.app-mobile-menu-btn:focus-visible {
-  outline: var(--focus-outline, 2px solid var(--color-focus));
-  outline-offset: var(--focus-outline-offset, 2px);
-}
-
-.app-mobile-title {
-  font-weight: 700;
-  font-size: 16px;
-  color: var(--color-accent-secondary, var(--accent));
-}
-
-/* ── Mobile sidebar backdrop ── */
 .app-sidebar-backdrop {
   display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 40;
-  border: none;
-  cursor: pointer;
 }
 
-/* ── Responsive ── */
-@media (max-width: 768px) {
-  .app-mobile-topbar {
-    display: flex;
+@media (max-width: 1024px) {
+  .app-layout__body {
+    padding: var(--space-4);
+  }
+}
+
+@media (max-width: 860px) {
+  .app-layout__body {
+    padding: 0;
   }
 
   .app-sidebar {
     position: fixed;
-    top: 0;
     left: 0;
+    top: 0;
     height: 100vh;
-    z-index: 50;
-    transform: translateX(-100%);
-    transition: transform var(--transition-base, 200ms ease-in-out);
+
+    transform: translateX(-110%);
   }
 
   .app-layout.is-mobile-open .app-sidebar {
     transform: translateX(0);
   }
 
-  .app-layout.is-mobile-open .app-sidebar-backdrop {
+  .app-sidebar-backdrop {
     display: block;
+    position: fixed;
+    inset: 0;
+
+    background: rgba(0, 0, 0, 0.46);
+
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
   }
 
-  .app-main {
-    padding: var(--space-lg, 16px);
+  .app-layout.is-mobile-open .app-sidebar-backdrop {
+    opacity: 1;
+    pointer-events: auto;
   }
 }

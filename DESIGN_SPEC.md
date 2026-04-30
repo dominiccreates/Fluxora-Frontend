@@ -10,23 +10,52 @@
 
 ## 1. Executive Summary
 
-### Problem Statement
-Fluxora-Frontend exhibits visual inconsistencies between:
-- **Marketing site** (Landing page): Uses modern Tailwind CSS patterns, hero-driven layout
-- **Authenticated app** (Dashboard): Uses inline styles, mixed CSS approaches
+### Problem
+Fluxora has inconsistent UI between:
+- Marketing site (Tailwind-based, modern spacing)
+- Authenticated app (custom CSS + inline styles)
 
 ### Impact
-- Users experience jarring UX transitions when moving from landing to app
-- Inconsistent button styles, spacing, color tokens reduce professionalism
-- Treasury/recipient mental models suffer from unclear hierarchy
-- Accessibility gaps (focus order, live regions, contrast) create compliance risk
+- Inconsistent user experience
+- Weak visual hierarchy in dashboard
+- Accessibility gaps (focus, contrast, ARIA)
+- Poor design system scalability
 
 ### Solution
-Unified visual system with:
-- Consistent design tokens (colors, spacing, typography)
-- Standardized component states across authenticated and anonymous surfaces
-- WCAG 2.1 AA accessibility compliance built-in
-- Implementation-ready specifications preventing engineering guesswork
+Introduce a unified **token-based design system**:
+- Spacing grid system
+- Consistent typography scale
+- Standardized colors + states
+- WCAG 2.1 AA accessibility compliance
+- Shared layout structure across app + landing
+
+---
+
+## 2. Design Principles
+
+- Consistency over creativity per screen
+- Token-driven styling (no magic numbers)
+- Accessibility-first UI
+- Predictable interaction patterns
+- Mobile-first responsive system
+
+---
+
+## 3. Design Tokens (Core System)
+
+### 3.1 Spacing System (Grid)
+```css
+:root {
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+}
 
 ---
 
