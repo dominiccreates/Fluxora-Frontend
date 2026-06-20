@@ -2,8 +2,11 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import RecentStreams from "../RecentStreams";
+import { treasuryDemoStreams } from "../../../fixtures/treasury";
 
-function renderRecentStreams(ui = <RecentStreams />) {
+function renderRecentStreams(
+  ui = <RecentStreams streams={treasuryDemoStreams} />,
+) {
   return render(<MemoryRouter>{ui}</MemoryRouter>);
 }
 
@@ -19,6 +22,6 @@ describe("treasuryOverviewPage RecentStreams", () => {
   it("passes empty treasury streams through to the table empty state", () => {
     renderRecentStreams(<RecentStreams streams={[]} />);
 
-    expect(screen.getByText("No streams found")).toBeInTheDocument();
+    expect(screen.getByText("No recent streams available.")).toBeInTheDocument();
   });
 });

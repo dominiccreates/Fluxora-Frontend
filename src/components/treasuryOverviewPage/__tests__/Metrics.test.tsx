@@ -1,13 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import Metrics from "../Metrics";
-import { metricsData } from "../sample-streams";
+import { treasuryDemoMetrics } from "../../../fixtures/treasury";
 
 describe("Metrics", () => {
   it("renders every treasury metric label and value", () => {
-    render(<Metrics />);
+    render(<Metrics metrics={treasuryDemoMetrics} />);
 
-    for (const metric of metricsData) {
+    for (const metric of treasuryDemoMetrics) {
       expect(screen.getByText(metric.label)).toBeInTheDocument();
       expect(screen.getByText(metric.value)).toBeInTheDocument();
     }
@@ -16,6 +16,8 @@ describe("Metrics", () => {
   it("renders an empty state when no metrics are available", () => {
     render(<Metrics metrics={[]} />);
 
-    expect(screen.getByText("No metrics available")).toBeInTheDocument();
+    expect(
+      screen.getByText("No treasury metrics available."),
+    ).toBeInTheDocument();
   });
 });

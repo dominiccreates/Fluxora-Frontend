@@ -1,13 +1,8 @@
 import { useRef, useState } from "react";
-import { streams as sampleStreams } from "./sample-streams.tsx";
 import StreamRow from "./StreamRow";
 import { Stream } from "./Stream";
 
-interface StreamsTableProps {
-  streams?: Stream[];
-}
-
-export default function StreamsTable({ streams = sampleStreams }: StreamsTableProps) {
+export default function StreamsTable({ streams }: { streams: Stream[] }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const tbodyRef = useRef<HTMLTableSectionElement>(null);
 
@@ -81,12 +76,8 @@ export default function StreamsTable({ streams = sampleStreams }: StreamsTablePr
             ))
           ) : (
             <tr>
-              <td
-                colSpan={5}
-                className="py-8 px-3 text-center"
-                style={{ color: "var(--color-text-muted)" }}
-              >
-                No streams found
+              <td colSpan={5} className="py-4 px-3 text-gray-500">
+                No recent streams available.
               </td>
             </tr>
           )}

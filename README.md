@@ -135,6 +135,8 @@ Search and link-preview metadata lives in `index.html`. Update the description,
 canonical URL, Open Graph tags, Twitter Card tags, and absolute HTTPS preview
 image there when launching a new campaign or changing the public marketing URL.
 
+- `VITE_DEMO_MODE` - Set to `true` or `1` to render treasury overview fixture data for screenshots and tests. Leave unset for the default live-data path.
+
 ## Related repos
 
 - **fluxora-backend** — API and streaming engine

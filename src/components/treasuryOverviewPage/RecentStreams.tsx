@@ -2,11 +2,7 @@ import { useNavigate } from "react-router-dom";
 import StreamsTable from "./StreamsTable";
 import type { Stream } from "./Stream";
 
-interface RecentStreamsProps {
-  streams?: Stream[];
-}
-
-export default function RecentStreams({ streams }: RecentStreamsProps) {
+export default function RecentStreams({ streams }: { streams: Stream[] }) {
   const navigate = useNavigate();
 
   return (
