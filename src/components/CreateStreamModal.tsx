@@ -34,6 +34,40 @@ function maskAddress(addr: string): string {
   return `${t.slice(0, 6)} . . . ${t.slice(-6)}`;
 }
 
+/**
+ * Converts a user-entered decimal string into the numeric value used by stream
+ * rate, duration, and deposit calculations.
+ */
+function parseStreamNumber(value: string): number {
+  return parseFloat(value.replace(/,/g, ""));
+}
+
+/**
+ * Calculates the total USDC deposit required for a daily stream rate across the
+ * entered duration in days.
+ */
+function calculateRequiredDeposit(
+  dailyRate: string,
+  durationDays: string,
+): string {
+  return (
+    parseStreamNumber(dailyRate || "0") * parseStreamNumber(durationDays || "0")
+  ).toFixed(2);
+}
+
+/**
+ * Formats a validated deposit amount for the review step without substituting
+ * fabricated placeholder values.
+ */
+function formatReviewDeposit(value: string): string {
+  return parseStreamNumber(value).toFixed(2);
+}
+
+/** Formats the daily duration unit with singular/plural copy. */
+function formatDurationUnit(value: string): string {
+  return parseStreamNumber(value) === 1 ? "day" : "days";
+}
+
 /** Stellar public key: starts with G, 56 chars, base32 (no 0,1,8,9). */
 function isValidStellarAddress(value: string): boolean {
   const trimmed = value.trim();
@@ -109,9 +143,7 @@ export default function CreateStreamModal({
   const accrualRateValue = parseFloat(accrualRate || "0");
   const durationValue = parseFloat(duration || "0");
   const requiredDepositValue = accrualRateValue * durationValue;
-  const requiredDeposit = (
-    Number.isFinite(requiredDepositValue) ? requiredDepositValue : 0
-  ).toFixed(2);
+  const requiredDeposit = calculateRequiredDeposit(accrualRate, duration);
 
   useModalAccessibility({
     isOpen,
@@ -711,11 +743,9 @@ export default function CreateStreamModal({
 
           {currentStep === 3 &&
             (() => {
-              const mockRecipient =
-                recipient.trim() || "GDU4D7EXAMPLEADDRESS0L50DR";
-              const mockDeposit = depositAmount.trim()
-                ? parseFloat(depositAmount.replace(/,/g, "")).toFixed(2)
-                : "200.00";
+              const reviewRecipient = recipient.trim();
+              const reviewDeposit = formatReviewDeposit(depositAmount);
+              const durationUnit = formatDurationUnit(duration);
               return (
                 <>
                   <hr className="divider" />
@@ -767,7 +797,7 @@ export default function CreateStreamModal({
                       <div className="review-card-content">
                         <div className="review-card-sublabel">Address</div>
                         <div className="review-card-value">
-                          {maskAddress(mockRecipient)}
+                          {maskAddress(reviewRecipient)}
                         </div>
                       </div>
                     </div>
@@ -818,7 +848,7 @@ export default function CreateStreamModal({
                       </div>
                       <div className="review-card-content">
                         <div className="review-card-amount">
-                          {mockDeposit}{" "}
+                          {reviewDeposit}{" "}
                           <span className="review-card-unit">USDC</span>
                         </div>
                       </div>
@@ -891,7 +921,7 @@ export default function CreateStreamModal({
                           </span>
                           <span className="review-card-row-label">Rate</span>
                           <span className="review-card-row-value">
-                            {accrualRate} USDC per month
+                            {accrualRate} USDC per day
                           </span>
                         </div>
                         <div className="review-card-row">
@@ -918,8 +948,7 @@ export default function CreateStreamModal({
                             Duration
                           </span>
                           <span className="review-card-row-value">
-                            {duration}{" "}
-                            {parseInt(duration, 10) === 1 ? "month" : "months"}
+                            {duration} {durationUnit}
                           </span>
                         </div>
                         <div className="review-card-row">
@@ -984,7 +1013,7 @@ export default function CreateStreamModal({
                     role="region"
                     aria-live="polite"
                   >
-                    <strong>By creating this stream:</strong> {mockDeposit} USDC
+                    <strong>By creating this stream:</strong> {reviewDeposit} USDC
                     will be locked in a Soroban smart contract. The recipient
                     can withdraw their accrued amount at any time during the
                     stream.
