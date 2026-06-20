@@ -126,3 +126,26 @@ describe("App route code splitting", () => {
     expect(await screen.findByText("Streams lazy route")).toBeInTheDocument();
   });
 });
+
+describe("App landing routes", () => {
+  beforeEach(() => {
+    dashboardModule = createDeferredPage("Dashboard lazy route");
+    streamsModule = createDeferredPage("Streams lazy route");
+    recipientModule = createDeferredPage("Recipient lazy route");
+    treasuryModule = createDeferredPage("Treasury lazy route");
+    emptyStateModule = createDeferredPage("Empty state lazy route");
+  });
+
+  it("redirects /landing to the canonical root landing page", async () => {
+    window.history.pushState({}, "", "/landing");
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("heading", { name: "Home route" }),
+      ).toBeInTheDocument();
+      expect(window.location.pathname).toBe("/");
+    });
+  });
+});
