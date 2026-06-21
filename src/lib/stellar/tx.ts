@@ -99,7 +99,7 @@ async function waitForTransaction(
     try {
       const res = await server.getTransaction(hash);
       if (res.status === SorobanRpc.Api.GetTransactionStatus.SUCCESS) {
-        return res;
+        return { ...res, txHash: res.txHash || hash };
       }
       if (res.status === SorobanRpc.Api.GetTransactionStatus.FAILED) {
         throw new TransactionError(
@@ -114,6 +114,32 @@ async function waitForTransaction(
     await new Promise((resolve) => setTimeout(resolve, delayMs));
   }
   throw new TransactionError("timeout", "Transaction confirmation timed out. Please check your explorer.");
+}
+
+/**
+ * Reads the latest Soroban RPC status for a submitted transaction hash.
+ */
+export async function getTransactionStatus(
+  hash: string,
+): Promise<"pending" | "confirmed" | "failed"> {
+  const rpcUrl = createConfig(import.meta.env).rpcUrl;
+
+  if (!rpcUrl) {
+    throw new TransactionError("rpc", "VITE_RPC_URL is not configured in environment variables.");
+  }
+
+  const server = new SorobanRpc.Server(rpcUrl);
+  const res = await server.getTransaction(hash);
+
+  if (res.status === SorobanRpc.Api.GetTransactionStatus.SUCCESS) {
+    return "confirmed";
+  }
+
+  if (res.status === SorobanRpc.Api.GetTransactionStatus.FAILED) {
+    return "failed";
+  }
+
+  return "pending";
 }
 
 /**

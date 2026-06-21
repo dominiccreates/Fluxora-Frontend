@@ -1,14 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import CreateStreamModal from '../CreateStreamModal';
-import { createStream } from '../../lib/stellar/tx';
+import { createStream, getTransactionStatus } from '../../lib/stellar/tx';
 
 // The modal performs the on-chain create-stream call itself and only surfaces
 // failures via the review-step error box + onStreamError, so we drive the
 // failure path by stubbing the tx layer and a connected wallet on the expected
-// network. (The global setup mock leaves the wallet disconnected.)
+// network. (The global setup mock leaves the wallet disconnected.) The
+// confirmation poller reads getTransactionStatus, which must also be stubbed.
 vi.mock('../../lib/stellar/tx', () => ({
   createStream: vi.fn(),
+  getTransactionStatus: vi.fn(),
 }));
 
 vi.mock('../wallet-connect/Walletcontext', () => ({
@@ -26,6 +28,7 @@ vi.mock('../wallet-connect/Walletcontext', () => ({
 }));
 
 const mockedCreateStream = vi.mocked(createStream);
+const mockedGetTransactionStatus = vi.mocked(getTransactionStatus);
 
 // Checksum-valid Stellar public key (required by the centralized
 // isValidStellarAddress validator introduced in #331).
@@ -35,6 +38,10 @@ const VALID_STELLAR =
 beforeEach(() => {
   vi.stubEnv('VITE_NETWORK', 'TESTNET');
   mockedCreateStream.mockReset();
+  // The confirmation poller never reaches a confirmed state in these
+  // failure-path tests, but keep it stubbed so the hook stays inert.
+  mockedGetTransactionStatus.mockReset();
+  mockedGetTransactionStatus.mockResolvedValue('pending');
 });
 
 afterEach(() => {

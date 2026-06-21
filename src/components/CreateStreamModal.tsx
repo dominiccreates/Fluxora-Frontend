@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import './CreateStreamModal.css';
 import { InputField } from './InputField';
 import { InputWithUnit } from './InputWithUnit';
@@ -6,7 +6,8 @@ import { InfoTooltip } from './InfoTooltip';
 import { useModalAccessibility } from './useModalAccessibility';
 import { useWallet } from './wallet-connect/Walletcontext';
 import { useToast } from './toast/ToastProvider';
-import { createStream } from '../lib/stellar/tx';
+import { useTransactionStatus } from '../hooks/useTransactionStatus';
+import { createStream, getTransactionStatus } from '../lib/stellar/tx';
 import { isValidStellarAddress, maskAddress } from '../lib/stellar';
 import {
   formatLocalDateTime,
@@ -128,6 +129,10 @@ export default function CreateStreamModal({
   const [error, setError] = useState<string | null>(null);
   const [streamError, setStreamError] = useState<string | null>(null);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittedTxHash, setSubmittedTxHash] = useState<string | null>(null);
+  const [hasCompletedConfirmation, setHasCompletedConfirmation] =
+    useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const recipientInputRef = useRef<HTMLInputElement>(null);
   const submitInFlightRef = useRef(false);
@@ -135,12 +140,27 @@ export default function CreateStreamModal({
   const handleBlur = (field: string) => {
     setTouched(prev => ({ ...prev, [field]: true }));
   };
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const userDeposit = 200.0;
   const accrualRateValue = parseFloat(accrualRate || "0");
   const durationValue = parseFloat(duration || "0");
   const requiredDepositValue = accrualRateValue * durationValue;
   const requiredDeposit = calculateRequiredDeposit(accrualRate, duration);
+  const transactionStatus = useTransactionStatus(submittedTxHash, {
+    enabled: currentStep === 3 && Boolean(submittedTxHash),
+    getStatus: getTransactionStatus,
+  });
+  const isConfirmationPending = transactionStatus.status === "pending";
+  const isBusyCreating = isSubmitting || isConfirmationPending;
+  const submitButtonLabel =
+    currentStep === 3 && isSubmitting
+      ? "Submitting..."
+      : currentStep === 3 && isConfirmationPending
+        ? "Confirming..."
+        : currentStep === 3 && transactionStatus.status === "failed"
+          ? "Retry create stream"
+          : currentStep === 2
+            ? "Next"
+            : "Create stream";
 
   useModalAccessibility({
     isOpen,
@@ -148,6 +168,32 @@ export default function CreateStreamModal({
     modalRef,
     initialFocusRef: recipientInputRef,
   });
+
+  useEffect(() => {
+    if (
+      transactionStatus.status !== "confirmed" ||
+      hasCompletedConfirmation
+    ) {
+      return;
+    }
+
+    setHasCompletedConfirmation(true);
+    addToast("Stream created successfully on-chain!", "success");
+    onStreamCreated?.();
+    onClose();
+  }, [
+    addToast,
+    hasCompletedConfirmation,
+    onClose,
+    onStreamCreated,
+    transactionStatus.status,
+  ]);
+
+  const resetTransactionState = () => {
+    transactionStatus.reset();
+    setSubmittedTxHash(null);
+    setHasCompletedConfirmation(false);
+  };
 
   const validateStep1 = (): boolean => {
     if (!recipient.trim()) {
@@ -233,6 +279,8 @@ export default function CreateStreamModal({
   };
 
   const handleNext = async () => {
+    if (isBusyCreating) return;
+
     if (currentStep === 1) {
       setTouched(prev => ({ ...prev, recipient: true, depositAmount: true }));
       if (!validateStep1()) return;
@@ -241,6 +289,7 @@ export default function CreateStreamModal({
     }
     if (currentStep === 2) {
       if (!validateStep2()) return;
+      resetTransactionState();
       setCurrentStep(3);
     } else if (currentStep === 3) {
       if (submitInFlightRef.current) return;
@@ -256,6 +305,7 @@ export default function CreateStreamModal({
 
       setError(null);
       setStreamError(null);
+      resetTransactionState();
       submitInFlightRef.current = true;
       setIsSubmitting(true);
 
@@ -272,10 +322,19 @@ export default function CreateStreamModal({
       const end = start + durationSeconds;
 
       try {
-        await createStream(sender, recipient.trim(), amountStr, start, end);
-        addToast("Stream created successfully on-chain!", "success");
-        await onStreamCreated?.();
-        onClose();
+        const response = await createStream(
+          sender,
+          recipient.trim(),
+          amountStr,
+          start,
+          end,
+        );
+        if (!response.txHash) {
+          throw new Error("Missing transaction hash from Stellar RPC.");
+        }
+        // Hand off to the confirmation poller; the success toast,
+        // onStreamCreated, and onClose fire once polling reports `confirmed`.
+        setSubmittedTxHash(response.txHash);
       } catch (err) {
         const message = getStreamErrorMessage(err);
         setStreamError(message);
@@ -289,7 +348,10 @@ export default function CreateStreamModal({
   };
 
   const handleBack = () => {
+    if (isBusyCreating) return;
+
     if (currentStep === 3) {
+      resetTransactionState();
       setCurrentStep(2);
     } else if (currentStep === 2) {
       setCurrentStep(1);
@@ -299,13 +361,19 @@ export default function CreateStreamModal({
   };
 
   const handleCancel = () => {
+    if (isBusyCreating) return;
+    onClose();
+  };
+
+  const handleClose = () => {
+    if (isBusyCreating) return;
     onClose();
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay create-stream-overlay" onClick={onClose}>
+    <div className="modal-overlay create-stream-overlay" onClick={handleClose}>
       <div
         className="modal-content create-stream-modal"
         ref={modalRef}
@@ -327,7 +395,8 @@ export default function CreateStreamModal({
           <button
             type="button"
             className="close-button"
-            onClick={onClose}
+            onClick={handleClose}
+            disabled={isBusyCreating}
             aria-label="Close create stream modal"
           >
             <svg
@@ -782,7 +851,11 @@ export default function CreateStreamModal({
                         <button
                           type="button"
                           className="review-card-edit"
-                          onClick={() => setCurrentStep(1)}
+                          onClick={() => {
+                            resetTransactionState();
+                            setCurrentStep(1);
+                          }}
+                          disabled={isBusyCreating}
                           aria-label="Edit recipient"
                         >
                           Edit
@@ -834,7 +907,11 @@ export default function CreateStreamModal({
                         <button
                           type="button"
                           className="review-card-edit"
-                          onClick={() => setCurrentStep(1)}
+                          onClick={() => {
+                            resetTransactionState();
+                            setCurrentStep(1);
+                          }}
+                          disabled={isBusyCreating}
                           aria-label="Edit deposit"
                         >
                           Edit
@@ -886,7 +963,11 @@ export default function CreateStreamModal({
                         <button
                           type="button"
                           className="review-card-edit"
-                          onClick={() => setCurrentStep(2)}
+                          onClick={() => {
+                            resetTransactionState();
+                            setCurrentStep(2);
+                          }}
+                          disabled={isBusyCreating}
                           aria-label="Edit rate and schedule"
                         >
                           Edit
@@ -1044,6 +1125,40 @@ export default function CreateStreamModal({
                     can withdraw their accrued amount at any time during the
                     stream.
                   </div>
+                  {isSubmitting && (
+                    <div
+                      className="transaction-status-box"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      Submitting transaction to Stellar. Keep this window open.
+                    </div>
+                  )}
+                  {!isSubmitting && transactionStatus.status === "pending" && (
+                    <div
+                      className="transaction-status-box"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      Waiting for Stellar confirmation before opening the
+                      success receipt.
+                      <span className="transaction-status-detail">
+                        Confirmation check {transactionStatus.attempts}
+                        {submittedTxHash
+                          ? ` - tx ${submittedTxHash.slice(0, 10)}...${submittedTxHash.slice(-8)}`
+                          : ""}
+                      </span>
+                    </div>
+                  )}
+                  {transactionStatus.status === "failed" && (
+                    <div
+                      className="transaction-status-box transaction-status-box--error"
+                      role="alert"
+                    >
+                      {transactionStatus.error ??
+                        "Transaction confirmation failed. Please retry."}
+                    </div>
+                  )}
                 </>
               );
             })()}
@@ -1057,7 +1172,7 @@ export default function CreateStreamModal({
                 type="button"
                 className="btn btn-cancel"
                 onClick={handleCancel}
-                disabled={isSubmitting}
+                disabled={isBusyCreating}
               >
                 Cancel
               </button>
@@ -1065,7 +1180,7 @@ export default function CreateStreamModal({
                 type="button"
                 className="btn btn-next"
                 onClick={handleNext}
-                disabled={isSubmitting}
+                disabled={isBusyCreating}
               >
                 Next
               </button>
@@ -1076,7 +1191,7 @@ export default function CreateStreamModal({
                 type="button"
                 className="btn btn-back"
                 onClick={handleBack}
-                disabled={isSubmitting}
+                disabled={isBusyCreating}
               >
                 Back
               </button>
@@ -1084,14 +1199,10 @@ export default function CreateStreamModal({
                 type="button"
                 className="btn btn-next"
                 onClick={handleNext}
-                disabled={isSubmitting}
-                aria-busy={isSubmitting && currentStep === 3}
+                disabled={isBusyCreating}
+                aria-busy={isBusyCreating && currentStep === 3}
               >
-                {currentStep === 3 && isSubmitting
-                  ? "Creating…"
-                  : currentStep === 2
-                    ? "Next"
-                    : "Create stream"}
+                {submitButtonLabel}
               </button>
             </>
           )}
