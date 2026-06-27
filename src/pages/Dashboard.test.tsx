@@ -22,6 +22,22 @@ vi.mock("../components/wallet-connect/Walletcontext", () => ({
   }),
 }));
 
+vi.mock("../components/treasuryOverviewPage/useTreasury", () => ({
+  useTreasury: () => ({
+    metrics: [],
+    streams: [],
+    loading: false,
+    error: null,
+    refetch: vi.fn(),
+  }),
+  useRecipientStreams: () => ({
+    streams: [],
+    loading: false,
+    error: null,
+    refetch: vi.fn(),
+  }),
+}));
+
 function renderDashboard() {
   render(<Dashboard />);
   act(() => {
