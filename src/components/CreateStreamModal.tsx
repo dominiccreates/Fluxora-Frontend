@@ -10,6 +10,8 @@ import { useTransactionStatus } from '../hooks/useTransactionStatus';
 import { createStream, getTransactionStatus } from '../lib/stellar/tx';
 import { isValidStellarAddress, maskAddress } from '../lib/stellar';
 import {
+  computeStreamEndDate,
+  validateCliffBeforeEnd,
   formatLocalDateTime,
   isBeforeLocalDateTime,
   isDateTimeInPast,
@@ -270,6 +272,15 @@ export default function CreateStreamModal({
         if (isBeforeLocalDateTime(cliffDate, customStartDate)) {
           return false;
         }
+      }
+      // Cross-field: cliff must not exceed stream end date
+      const selectedCliffDate = new Date(cliffDate);
+      const startMs = startTimeOption === 'custom' && customStartDate
+        ? new Date(customStartDate).getTime()
+        : Date.now();
+      const endDate = computeStreamEndDate(new Date(startMs), parseFloat(duration));
+      if (endDate && validateCliffBeforeEnd(selectedCliffDate, endDate) !== null) {
+        return false;
       }
     }
     return true;
@@ -598,7 +609,18 @@ export default function CreateStreamModal({
                 ? t("createStream.validation.cliffDatePast")
                 : (startTimeOption === 'custom' && customStartDate && isBeforeLocalDateTime(cliffDate, customStartDate))
                 ? t("createStream.validation.cliffDateAfterStart")
-                : undefined)
+                : (() => {
+                    // Cross-field: cliff must be on or before the stream end date.
+                    const startMs = startTimeOption === 'custom' && customStartDate
+                      ? new Date(customStartDate).getTime()
+                      : Date.now();
+                    const endDate = computeStreamEndDate(new Date(startMs), parseFloat(duration));
+                    if (endDate) {
+                      const msg = validateCliffBeforeEnd(new Date(cliffDate), endDate);
+                      if (msg) return msg;
+                    }
+                    return undefined;
+                  })())
             : undefined;
           const cliffDateSuccess = cliffEnabled && touched.cliffDate && !cliffDateError && Boolean(cliffDate);
 
