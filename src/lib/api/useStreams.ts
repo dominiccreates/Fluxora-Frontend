@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   getStreamById,
   getStreams,
+  getRecipientStreams,
   StreamsServiceError,
   type StreamsFilters,
 } from "./streamsService";
@@ -67,6 +68,72 @@ export function useStreams(filters?: StreamsFilters): UseStreamsResult {
   const refetch = useCallback(() => setTick((t) => t + 1), []);
 
   return { streams, loading, error, refetch };
+}
+
+// ---------------------------------------------------------------------------
+// useRecipientStreams
+// ---------------------------------------------------------------------------
+
+interface UseRecipientStreamsResult {
+  data: StreamRecord[];
+  loading: boolean;
+  error: StreamsServiceError | null;
+  refetch: () => void;
+}
+
+/**
+ * Fetches streams for a specific recipient address.
+ * Cancels the in-flight request on unmount or address change.
+ */
+export function useRecipientStreams(address: string): UseRecipientStreamsResult {
+  const [data, setData] = useState<StreamRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<StreamsServiceError | null>(null);
+  const triggerRef = useRef(0);
+
+  const refetch = () => {
+    triggerRef.current += 1;
+    setLoading(true);
+  };
+
+  useEffect(() => {
+    if (!address) {
+      setData([]);
+      setLoading(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    let cancelled = false;
+
+    setLoading(true);
+    setError(null);
+
+    getRecipientStreams(address)
+      .then((records) => {
+        if (!cancelled) {
+          setData(records);
+          setLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (cancelled || controller.signal.aborted) return;
+        setError(
+          err instanceof StreamsServiceError
+            ? err
+            : new StreamsServiceError(String(err), "network"),
+        );
+        setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address, triggerRef.current]);
+
+  return { data, loading, error, refetch };
 }
 
 // ---------------------------------------------------------------------------
