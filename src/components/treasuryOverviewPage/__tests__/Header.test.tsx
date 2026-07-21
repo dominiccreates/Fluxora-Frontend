@@ -1,10 +1,11 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { describe, expect, it } from 'vitest';
 import Header from '../Header';
 
 describe('TreasuryOverviewHeader', () => {
   it('renders the treasury heading with theme-aware text styles and no fixed black/white color class', () => {
-    const { container } = render(
+    render(
       <MemoryRouter>
         <Header />
       </MemoryRouter>,
