@@ -20,9 +20,10 @@
  *   • The action button meets 44×44 px minimum touch target.
  *   • All interactive elements expose focus-visible ring.
  */
-
-import "./state-display.css";
+// ZeroAccrualBanner has its own stylesheet after being separated from StateDisplay.
+import "./zero-accrual-banner.css";
 import { formatLocalDate } from "../lib/formatters";
+
 
 export type ZeroAccrualReason =
   | "cliff"         // Cliff date hasn't passed yet
