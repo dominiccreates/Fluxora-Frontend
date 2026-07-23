@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, Moon, Sun } from "lucide-react";
+import { Menu, X, Moon, Sun, Type } from "lucide-react";
 import { useWallet } from "../wallet-connect/Walletcontext";
 import { useTheme } from "../../theme/ThemeProvider";
 import NavLink from "./NavLink";
@@ -146,7 +146,7 @@ export default function AppNavbar({
   onSidebarToggle,
   isSidebarOpen = false,
 }: AppNavbarProps) {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, easyReadFont, toggleEasyReadFont } = useTheme();
   const {
     connected,
     address,
@@ -241,6 +241,21 @@ const location = useLocation();
 
         {/* Right: Actions (desktop) */}
         <div className="hidden md:flex items-center gap-3">
+          {/* Easy-read font toggle */}
+          <button
+            onClick={toggleEasyReadFont}
+            aria-label="Toggle easy-read font"
+            aria-pressed={easyReadFont}
+            title={easyReadFont ? "Disable easy-read font" : "Enable easy-read font"}
+            className={`flex items-center justify-center min-h-[44px] min-w-[44px] rounded-full border transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
+              easyReadFont
+                ? "border-[var(--accent)] text-[var(--accent)] bg-[var(--surface-elevated)]"
+                : "border-[var(--navbar-icon-border)] text-[var(--navbar-icon-color)] hover:border-[var(--accent)]/50 hover:text-[var(--accent)]"
+            }`}
+          >
+            <Type size={16} aria-hidden="true" />
+          </button>
+
           {/* Theme toggle */}
           <button
             onClick={toggleTheme}
@@ -325,6 +340,22 @@ const location = useLocation();
           ))}
 
           <div className="mt-3 pt-3 border-t border-[var(--navbar-border)] flex items-center gap-3 flex-wrap">
+            {/* Easy-read font toggle */}
+            <button
+              onClick={toggleEasyReadFont}
+              aria-label="Toggle easy-read font"
+              aria-pressed={easyReadFont}
+              title={easyReadFont ? "Disable easy-read font" : "Enable easy-read font"}
+              className={`flex items-center justify-center min-h-[44px] min-w-[44px] rounded-full border transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
+                easyReadFont
+                  ? "border-[var(--accent)] text-[var(--accent)] bg-[var(--surface-elevated)]"
+                  : "border-[var(--navbar-icon-border)] text-[var(--navbar-icon-color)] hover:border-[var(--accent)]/50 hover:text-[var(--accent)]"
+              }`}
+            >
+              <Type size={16} aria-hidden="true" />
+            </button>
+
+            {/* Theme toggle */}
             <button
               onClick={toggleTheme}
               aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}

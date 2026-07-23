@@ -19,6 +19,9 @@ export type Theme = "light" | "dark";
 /** `localStorage` key under which the user's explicit theme choice is persisted. */
 export const THEME_STORAGE_KEY = "theme";
 
+/** `localStorage` key under which the user's explicit font choice is persisted. */
+export const FONT_STORAGE_KEY = "easy-read-font";
+
 /** Media query used to detect the operating-system colour-scheme preference. */
 const DARK_MEDIA_QUERY = "(prefers-color-scheme: dark)";
 
@@ -38,6 +41,16 @@ export function isTheme(value: unknown): value is Theme {
 }
 
 /**
+ * Narrowing type guard for the easy-read font preference.
+ *
+ * @param value - Any candidate value.
+ * @returns `true` when value is boolean or boolean-string.
+ */
+export function isEasyReadFont(value: unknown): value is boolean {
+  return value === true || value === false || value === "true" || value === "false";
+}
+
+/**
  * Reads the persisted theme, validating it against {@link isTheme}.
  *
  * @returns The stored {@link Theme}, or `null` when nothing valid is stored
@@ -51,6 +64,21 @@ function getStoredTheme(): Theme | null {
   } catch {
     // Accessing localStorage can throw (Safari private mode, disabled storage).
     return null;
+  }
+}
+
+/**
+ * Reads the persisted easy-read font preference, validating it against {@link isEasyReadFont}.
+ *
+ * @returns The stored boolean preference, or false when not present or invalid.
+ */
+export function getStoredFontPreference(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    const stored = window.localStorage.getItem(FONT_STORAGE_KEY);
+    return isEasyReadFont(stored) ? stored === "true" || stored === true : false;
+  } catch {
+    return false;
   }
 }
 
@@ -87,9 +115,20 @@ export function applyTheme(theme: Theme): void {
 }
 
 /**
- * Resolves and applies the initial theme synchronously, before React renders.
+ * Applies the easy-read font preference to the document root. This is the **single place**
+ * in the app that mutates the `data-font` attribute.
  *
- * Call this once from the app entry point so the correct `data-theme` is set
+ * @param easyRead - A boolean indicating whether to use the easy-read font.
+ */
+export function applyFontPreference(easyRead: boolean): void {
+  if (typeof document === "undefined") return;
+  document.documentElement.setAttribute("data-font", easyRead ? "easy-read" : "default");
+}
+
+/**
+ * Resolves and applies the initial theme and font preference synchronously, before React renders.
+ *
+ * Call this once from the app entry point so the correct `data-theme` and `data-font` is set
  * ahead of the first paint, avoiding a flash of the wrong theme (FOUC).
  *
  * @returns The {@link Theme} that was applied.
@@ -97,6 +136,8 @@ export function applyTheme(theme: Theme): void {
 export function initTheme(): Theme {
   const theme = resolveInitialTheme();
   applyTheme(theme);
+  const easyRead = getStoredFontPreference();
+  applyFontPreference(easyRead);
   return theme;
 }
 
@@ -108,22 +149,22 @@ export interface ThemeContextValue {
   setTheme: (theme: Theme) => void;
   /** Flips between `"light"` and `"dark"` as an explicit choice. */
   toggleTheme: () => void;
+  /** Whether the dyslexia-friendly "easy-read" font is active. */
+  easyReadFont: boolean;
+  /** Sets the dyslexia-friendly font preference explicitly. */
+  setEasyReadFont: (easyReadFont: boolean) => void;
+  /** Flips the easy-read font preference. */
+  toggleEasyReadFont: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 /**
- * Provides theme state to the tree and keeps `data-theme` in sync from one
- * place. Responsibilities:
- *
- * - Initialises from `localStorage`, falling back to the OS preference.
- * - Follows `prefers-color-scheme` changes **until** the user makes an explicit
- *   choice, after which the choice wins.
- * - Synchronises across tabs via the `storage` event.
- * - Validates every untrusted value through {@link isTheme}.
+ * Provides theme state to the tree and keeps `data-theme` and `data-font` in sync.
  */
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(resolveInitialTheme);
+  const [easyReadFont, setEasyReadState] = useState<boolean>(getStoredFontPreference);
 
   // Whether the user (in this tab or another) has explicitly picked a theme.
   // While `false`, we keep following the OS preference. A ref keeps the latest
@@ -134,6 +175,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     applyTheme(theme);
   }, [theme]);
+
+  useEffect(() => {
+    applyFontPreference(easyReadFont);
+  }, [easyReadFont]);
 
   const setTheme = useCallback((next: Theme) => {
     hasExplicitChoiceRef.current = true;
@@ -148,6 +193,27 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const toggleTheme = useCallback(() => {
     setTheme(theme === "light" ? "dark" : "light");
   }, [theme, setTheme]);
+
+  const setEasyReadFont = useCallback((next: boolean) => {
+    if (typeof document !== "undefined") {
+      document.documentElement.setAttribute("data-font-transitioning", "true");
+    }
+    try {
+      window.localStorage.setItem(FONT_STORAGE_KEY, String(next));
+    } catch {
+      // Ignore persistence failures.
+    }
+    setEasyReadState(next);
+    setTimeout(() => {
+      if (typeof document !== "undefined") {
+        document.documentElement.removeAttribute("data-font-transitioning");
+      }
+    }, 150);
+  }, []);
+
+  const toggleEasyReadFont = useCallback(() => {
+    setEasyReadFont(!easyReadFont);
+  }, [easyReadFont, setEasyReadFont]);
 
   // Follow the OS colour-scheme preference, but only while the user has not
   // made an explicit choice. Effects only run in the browser, so we only need
@@ -178,20 +244,45 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // SSR guard is needed here.
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
-      if (event.key !== THEME_STORAGE_KEY) return;
+      if (event.key === THEME_STORAGE_KEY) {
+        if (event.newValue === null) {
+          // Another tab cleared the choice → resume following the OS.
+          hasExplicitChoiceRef.current = false;
+          setThemeState(getSystemTheme());
+          return;
+        }
 
-      if (event.newValue === null) {
-        // Another tab cleared the choice → resume following the OS.
-        hasExplicitChoiceRef.current = false;
-        setThemeState(getSystemTheme());
-        return;
-      }
+        if (isTheme(event.newValue)) {
+          hasExplicitChoiceRef.current = true;
+          setThemeState(event.newValue);
+        }
+      } else if (event.key === FONT_STORAGE_KEY) {
+        if (event.newValue === null) {
+          if (typeof document !== "undefined") {
+            document.documentElement.setAttribute("data-font-transitioning", "true");
+          }
+          setEasyReadState(false);
+          setTimeout(() => {
+            if (typeof document !== "undefined") {
+              document.documentElement.removeAttribute("data-font-transitioning");
+            }
+          }, 150);
+          return;
+        }
 
-      if (isTheme(event.newValue)) {
-        hasExplicitChoiceRef.current = true;
-        setThemeState(event.newValue);
+        if (event.newValue === "true" || event.newValue === "false") {
+          const nextVal = event.newValue === "true";
+          if (typeof document !== "undefined") {
+            document.documentElement.setAttribute("data-font-transitioning", "true");
+          }
+          setEasyReadState(nextVal);
+          setTimeout(() => {
+            if (typeof document !== "undefined") {
+              document.documentElement.removeAttribute("data-font-transitioning");
+            }
+          }, 150);
+        }
       }
-      // Invalid/tampered values are ignored — never applied to the DOM.
     };
 
     window.addEventListener("storage", handleStorage);
@@ -199,8 +290,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<ThemeContextValue>(
-    () => ({ theme, setTheme, toggleTheme }),
-    [theme, setTheme, toggleTheme],
+    () => ({
+      theme,
+      setTheme,
+      toggleTheme,
+      easyReadFont,
+      setEasyReadFont,
+      toggleEasyReadFont,
+    }),
+    [theme, setTheme, toggleTheme, easyReadFont, setEasyReadFont, toggleEasyReadFont],
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
